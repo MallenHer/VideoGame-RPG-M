@@ -1,7 +1,8 @@
+
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
 
-ctx.font = "30px Arial";
+ctx.font = "40px Fantasy";
 //globals
  
 let HEIGHT = canvas.height;
@@ -13,25 +14,30 @@ let paused = false;
 
 let interval;
 let player;
-let sound = {play : "./img/1-32 Forest Kingdom (8bit).mp3"}
+let sound = {play : "./img/1-32 Forest Kingdom (8bit).mp3", 
+over : "./img/1-09. Song of the Ancients (Arranged by Jun Hayakawa with Atsuki Yoshida) [EMO Quartet..mp3"}
 let gameOn = false;
 let enemyList = {};
 let bulletList = {};
  
- 
+
 let img = {};
 img.player = new Image ();
- img.player.src = "./img/player.gif";
+img.player.src = "./img/player.gif";
+
+
+
  img.enemy = new Image ();
- img.enemy.src = "../juegoII/img/enemy.gif";
+ img.enemy.src = "./img/enemy.gif";
+ //img.enemy.onload = () => this.draw().bind(this).bind(this)
  img.enemy2 = new Image ();
- img.enemy2.src = "../juegoII/img/enemy2.png";
+ img.enemy2.src = "./img/enemy2.png";
  img.bullet = new Image ();
- img.bullet.src = "../juegoII/img/fireball.png";
+ img.bullet.src = "./img/fireball.png";
  img.upgrade1 = new Image ();
- img.upgrade1.src = "../juegoII/img/heart.png";
+ img.upgrade1.src = "./img/heart.png";
  img.upgrade2 = new Image ();
- img.upgrade2.src = "../juegoII/img/score.png";
+ img.upgrade2.src = "./img/score.png";
 
 
  
@@ -267,7 +273,7 @@ Enemy.randomlyGenerate = function(){
         let id = Math.random();
         if(Math.random() < 0.5)
         Enemy(id,x,y,width,height,img.enemy2,2,1);
-         else
+	 else
         Enemy(id,x,y,width,height,img.enemy,1,3);
        
 }
@@ -448,6 +454,7 @@ document.onkeydown = function(event){
  
 document.onkeyup = function(event){
         if(event.keyCode === 32){
+		music.play()
                 player.performAttack();
         }
         if(event.keyCode === 68)        //d
@@ -463,13 +470,14 @@ document.onkeyup = function(event){
 update = function(){
         if(paused){
 	 ctx.fillText('Paused',WIDTH/2,HEIGHT/2);
+	 music.pause();
 	 return;
 	}
         ctx.clearRect(0,0,WIDTH,HEIGHT);
         Maps.current.draw();
         frameCount++;
 	score++;
-	music.play();
+	
         Bullet.update();
 	Upgrade.update();
 	Enemy.update();
@@ -485,7 +493,8 @@ update = function(){
  
 startNewGame = function(){
 	interval = setInterval(update,40);
-        player.hp = 100;
+	// music.play()
+        player.hp = 50;
         timeWhenGameStarted = Date.now();
         frameCount = 0;
         score = 0;
@@ -504,6 +513,9 @@ startNewGame = function(){
 	Enemy.randomlyGenerate();
         Enemy.randomlyGenerate();
 	Enemy.randomlyGenerate();
+	Enemy.randomlyGenerate();
+        Enemy.randomlyGenerate();
+	Enemy.randomlyGenerate();
        
 }
 
@@ -511,6 +523,10 @@ let music = new Audio()
  music.src = sound.play
  music.loop = true;
  music.currentTime = 0
+
+ let gameOverSound = new Audio()
+ gameOverSound.src = sound.over
+ gameOverSound.currentTime = 0
 
  
 Maps = function(id,imgSrc,width,height){
@@ -538,16 +554,17 @@ function gameOver() {
 	clearInterval(interval)
 	gameOn = false
 	music.pause()
+	gameOverSound.play()
 	ctx.font = "40px Avenir"
+	ctx.fillStyle = "red"
+	ctx.fillText("GAME OVER", 300,200)
 	ctx.fillStyle = "black"
-	ctx.fillText("GAME OVER", 190,200)
-	ctx.font = "20px Avenir"
-	ctx.fillStyle = "black"
-	ctx.fillText("You Lose! You Survive for : " + score, 170,240)
+	ctx.fillText("You Lose! Your score : " + score, 170,240)
+	ctx.fillText("Player 2 press space bar", 220,340)
 
       }
 
-Maps.current = Maps('field',"../juegoII/img/map.jpg",1380,1100);
+Maps.current = Maps('field',"./img/map.jpg",1380,1100);
 
 
 
@@ -562,6 +579,8 @@ addEventListener('keydown', e=> {
 	switch (e.keyCode){
 	  case 32:
 	  if(!gameOn) startNewGame()
-
+	  gameOverSound.src = sound.over;
+	  music.pause()
 	}
+	
       })
