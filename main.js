@@ -11,16 +11,19 @@ let frameCount = 0;
 let score = 0;
 let paused = false;
 
+let interval;
 let player;
+let sound = {play : "./img/1-32 Forest Kingdom (8bit).mp3"}
+let gameOn = false;
 let enemyList = {};
 let bulletList = {};
  
  
 let img = {};
 img.player = new Image ();
- img.player.src = "./img/player.png";
+ img.player.src = "./img/player.gif";
  img.enemy = new Image ();
- img.enemy.src = "../juegoII/img/enemy1.gif";
+ img.enemy.src = "../juegoII/img/enemy.gif";
  img.enemy2 = new Image ();
  img.enemy2.src = "../juegoII/img/enemy2.png";
  img.bullet = new Image ();
@@ -66,7 +69,7 @@ img.player = new Image ();
 	self.onDeath = function(){
 		var timeSurvived = Date.now() - timeWhenGameStarted;		
 		console.log("You lost! You survived for " + timeSurvived + " ms.");		
-		startNewGame();
+		gameOver();
 	}
 	self.pressingDown = false;
 	self.pressingUp = false;
@@ -77,6 +80,7 @@ img.player = new Image ();
         self.pressingMouseRight = false;
         
 	return self;
+	
 	
 }
 
@@ -200,7 +204,7 @@ Enemy = function(id,x,y,width,height,img,hp,atkSpd){
 		
 		self.aimAngle = Math.atan2(diffY,diffX) / Math.PI * 180
 	}
-        let super_draw = self.draw; 
+        var super_draw = self.draw; 
 	self.draw = function(){
 		super_draw();
 		var x = self.x - player.x + WIDTH/2;
@@ -258,8 +262,8 @@ Enemy.randomlyGenerate = function(){
         //Math.random() returns a number between 0 and 1
         let x = Math.random()*Maps.current.width;
         let y = Math.random()*Maps.current.height;
-        let height = 150;     //between 10 and 40
-        let width = 150;
+        let height = 130;     //between 10 and 40
+        let width = 130;
         let id = Math.random();
         if(Math.random() < 0.5)
         Enemy(id,x,y,width,height,img.enemy2,2,1);
@@ -319,7 +323,7 @@ Bullet = function (id,x,y,spdX,spdY,width,height,combatType){
         self.timer = 0;
 	self.combatType = combatType;
 	self.spdX = spdX;
-	self.spdY = spdY
+	self.spdY = spdY;
 	
 	self.updatePosition = function(){
 		self.x += self.spdX;
@@ -388,7 +392,7 @@ Bullet.generate = function(actor,aimOverwrite){
        
         let spdX = Math.cos(angle/180*Math.PI)*10;
         let spdY = Math.sin(angle/180*Math.PI)*10;
-        Bullet(id,x,y,spdX,spdY,width,height);
+        Bullet(id,x,y,spdX,spdY,width,height,actor.type);
 }
  
 testCollisionRectRect = function(rect1,rect2){
@@ -464,11 +468,12 @@ update = function(){
         ctx.clearRect(0,0,WIDTH,HEIGHT);
         Maps.current.draw();
         frameCount++;
-        score++;
-
+	score++;
+	music.play();
         Bullet.update();
 	Upgrade.update();
-        Enemy.update();
+	Enemy.update();
+	
 	
 	player.update();
 	
@@ -479,18 +484,34 @@ update = function(){
 
  
 startNewGame = function(){
+	interval = setInterval(update,40);
         player.hp = 100;
         timeWhenGameStarted = Date.now();
         frameCount = 0;
         score = 0;
         Enemy.list = {};
         Upgrade.list = {};
-        Bullet.list = {};
+	Bullet.list = {};
+	music.currentTime = 0;
+	gameOn = true;
+	
         Enemy.randomlyGenerate();
         Enemy.randomlyGenerate();
+	Enemy.randomlyGenerate();
+	Enemy.randomlyGenerate();
         Enemy.randomlyGenerate();
+	Enemy.randomlyGenerate();
+	Enemy.randomlyGenerate();
+        Enemy.randomlyGenerate();
+	Enemy.randomlyGenerate();
        
 }
+
+let music = new Audio()
+ music.src = sound.play
+ music.loop = true;
+ music.currentTime = 0
+
  
 Maps = function(id,imgSrc,width,height){
 	let self = {
@@ -511,7 +532,22 @@ Maps = function(id,imgSrc,width,height){
 	return self;
 }
 
-Maps.current = Maps('field',"../juegoII/img/map.jpg",1280,960);
+
+
+function gameOver() {
+	clearInterval(interval)
+	gameOn = false
+	music.pause()
+	ctx.font = "40px Avenir"
+	ctx.fillStyle = "black"
+	ctx.fillText("GAME OVER", 190,200)
+	ctx.font = "20px Avenir"
+	ctx.fillStyle = "black"
+	ctx.fillText("You Lose! You Survive for : " + score, 170,240)
+
+      }
+
+Maps.current = Maps('field',"../juegoII/img/map.jpg",1380,1100);
 
 
 
@@ -519,6 +555,13 @@ Maps.current = Maps('field',"../juegoII/img/map.jpg",1280,960);
 
 player = Player();
 startNewGame();
- 
-setInterval(update,40);
 
+ 
+
+addEventListener('keydown', e=> {
+	switch (e.keyCode){
+	  case 32:
+	  if(!gameOn) startNewGame()
+
+	}
+      })
